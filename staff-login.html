@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCare | Staff Login</title>
+    <link rel="stylesheet" href="staff-login.css">
+</head>
+<body>
+
+    <main class="login-card">
+
+        <div class="logo">✚ SmartCare</div>
+
+        <h1>Staff Login</h1>
+        <p>Sign in to manage the patient queue.</p>
+
+        <form id="loginForm">
+
+            <label for="email">Email</label>
+            <input
+                id="email"
+                type="email"
+                placeholder="staff@example.com"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                type="password"
+                placeholder="Enter password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button id="signInButton" type="submit">
+                Sign In
+            </button>
+
+            <p id="message"></p>
+
+        </form>
+
+        <a href="index.html">← Patient Website</a>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="staff-login.js"></script>
+
+</body>
+</html>

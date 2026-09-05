@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartCare | Digital Patient Registration</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <a href="#home" class="logo">
+            <span>✚</span> SmartCare
+        </a>
+
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#registration">Registration</a>
+            <a href="#my-token">My Token</a>
+            <a href="#live-queue">Live Queue</a>
+            <a href="#guidance">Guidance</a>
+            <a href="staff.html" class="nav-btn">
+                Staff Login
+            </a>
+        </nav>
+
+        <a href="#registration" class="nav-btn">
+            Register Now
+        </a>
+    </header>
+
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+
+        <div class="hero-content">
+
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Hospital Services Available
+            </div>
+
+            <h1>
+                Your Healthcare Journey,
+                <span>Made Simple.</span>
+            </h1>
+
+            <p>
+                Register digitally, receive your token, and follow your
+                queue without unnecessary waiting.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#registration" class="primary-btn">
+                    Register as Patient →
+                </a>
+
+                <a href="#live-queue" class="secondary-btn">
+                    View Live Queue
+                </a>
+            </div>
+
+        </div>
+
+
+        <!-- LIVE QUEUE PREVIEW -->
+        <div class="queue-preview">
+
+            <div class="preview-header">
+                <h3>LIVE QUEUE STATUS</h3>
+
+                <span class="live-badge">
+                    ● LIVE
+                </span>
+            </div>
+
+            <p class="department-name">
+                Outpatient Department
+            </p>
+
+            <div class="token-display">
+                <small>Currently Serving</small>
+                <strong id="heroServingToken">A-001</strong>
+                <span>General Medicine</span>
+            </div>
+
+            <div class="queue-info">
+                <div>
+                    <strong id="heroNextToken">A-002</strong>
+                    <small>Next Token</small>
+                </div>
+
+                <div>
+                    <strong id="heroWaitingCount">2</strong>
+                    <small>Patients Waiting</small>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <span id="heroProgress"></span>
+            </div>
+
+            <p class="queue-update">
+                Queue updates automatically.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- STATISTICS -->
+    <section class="stats-section">
+
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div>
+                <strong id="registeredCount">2</strong>
+                <span>Patients Registered</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">⏱</div>
+            <div>
+                <strong>5 min</strong>
+                <span>Average Waiting Time</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">🏥</div>
+            <div>
+                <strong>6</strong>
+                <span>Departments Available</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">✓</div>
+            <div>
+                <strong>24/7</strong>
+                <span>System Availability</span>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- REGISTRATION SECTION -->
+    <section class="section registration-section" id="registration">
+
+        <div class="section-heading">
+            <span class="section-label">DIGITAL REGISTRATION</span>
+
+            <h2>Start Your Healthcare Journey</h2>
+
+            <p>
+                Fill in your details to receive a digital token and
+                access hospital services.
+            </p>
+        </div>
+
+
+        <div class="registration-container">
+
+            <!-- REGISTRATION FORM -->
+            <div class="registration-card">
+
+                <div class="card-heading">
+                    <div class="title-icon">📋</div>
+
+                    <div>
+                        <h3>Patient Registration</h3>
+                        <p>Enter your basic information</p>
+                    </div>
+                </div>
+
+
+                <form id="registrationForm">
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label for="fullName">
+                                Full Name *
+                            </label>
+
+                            <input
+                                type="text"
+                                id="fullName"
+                                placeholder="Enter your full name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="age">
+                                Age *
+                            </label>
+
+                            <input
+                                type="number"
+                                id="age"
+                                placeholder="Enter age"
+                                min="1"
+                                max="120"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label for="mobile">
+                                Mobile Number *
+                            </label>
+
+                            <input
+                                type="tel"
+                                id="mobile"
+                                placeholder="Enter mobile number"
+                                pattern="[0-9]{10}"
+                                maxlength="10"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">
+                                Gender *
+                            </label>
+
+                            <select id="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="department">
+                            Select Department *
+                        </label>
+
+                        <select id="department" required>
+                            <option value="">Choose a department</option>
+                            <option value="General Medicine">
+                                General Medicine
+                            </option>
+                            <option value="Cardiology">
+                                Cardiology
+                            </option>
+                            <option value="Dermatology">
+                                Dermatology
+                            </option>
+                            <option value="Orthopedics">
+                                Orthopedics
+                            </option>
+                            <option value="Pediatrics">
+                                Pediatrics
+                            </option>
+                            <option value="ENT">
+                                ENT
+                            </option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="reason">
+                            Reason for Visit
+                        </label>
+
+                        <textarea
+                            id="reason"
+                            placeholder="Briefly describe your symptoms or reason for visiting"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+
+                    <button type="submit" class="submit-btn">
+                        Generate Digital Token →
+                    </button>
+
+                </form>
+
+
+                <!-- SUCCESS MESSAGE -->
+                <div
+                    class="registration-success"
+                    id="registrationSuccess"
+                    hidden
+                >
+
+                    <div class="success-icon">✓</div>
+
+                    <h3>Registration Successful!</h3>
+
+                    <p>
+                        Your digital token has been generated.
+                    </p>
+
+                    <div class="token-result">
+                        <span>Your Token Number</span>
+                        <strong id="generatedToken">A-003</strong>
+                    </div>
+
+                    <button
+                        class="secondary-btn"
+                        id="registerAnotherBtn"
+                    >
+                        Register Another Patient
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- INFORMATION CARDS -->
+            <div class="registration-info">
+
+                <div class="info-card">
+                    <div class="info-icon">🎟️</div>
+
+                    <h3>Get Your Digital Token</h3>
+
+                    <p>
+                        After registration, you will receive a unique
+                        token number for your selected department.
+                    </p>
+                </div>
+
+
+                <div class="info-card">
+                    <div class="info-icon">📊</div>
+
+                    <h3>Track Your Queue</h3>
+
+                    <p>
+                        Monitor your position and estimated waiting
+                        time from your device.
+                    </p>
+                </div>
+
+
+                <div class="info-card">
+                    <div class="info-icon">🔔</div>
+
+                    <h3>Receive Guidance</h3>
+
+                    <p>
+                        Get instructions about your department,
+                        waiting area, and next steps.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- MY TOKEN SECTION -->
+    <section class="section dashboard-section" id="my-token">
+
+        <div class="section-heading">
+            <span class="section-label">PATIENT DASHBOARD</span>
+
+            <h2>Track Your Digital Token</h2>
+
+            <p>
+                Enter your token number to check your current queue status.
+            </p>
+        </div>
+
+
+        <div class="patient-dashboard">
+
+            <div class="token-search">
+                <input
+                    type="text"
+                    id="tokenSearchInput"
+                    placeholder="Enter token number, e.g. A-003"
+                >
+
+                <button id="trackTokenBtn" class="primary-btn">
+                    Track Token
+                </button>
+            </div>
+
+
+            <div class="dashboard-result" id="dashboardResult">
+
+                <div class="empty-dashboard">
+                    <div>🎟️</div>
+                    <h3>No Token Selected</h3>
+                    <p>
+                        Register as a patient or enter your token number
+                        above to track your queue.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- LIVE QUEUE SECTION -->
+    <section class="section queue-section" id="live-queue">
+
+        <div class="section-heading">
+            <span class="section-label">REAL-TIME QUEUE</span>
+
+            <h2>Live Hospital Queue</h2>
+
+            <p>
+                View the current status of patients waiting for service.
+            </p>
+        </div>
+
+
+        <div class="queue-dashboard">
+
+            <div class="dashboard-header">
+                <div>
+                    <h3>Outpatient Department</h3>
+                    <p>Queue status updates automatically</p>
+                </div>
+
+                <span class="live-badge">
+                    ● LIVE
+                </span>
+            </div>
+
+
+            <div class="queue-table-wrapper">
+
+                <table class="queue-table">
+
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Patient</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Estimated Time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="queueTableBody">
+                        <!-- JavaScript inserts queue rows -->
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- GUIDANCE SECTION -->
+    <section class="section guidance-section" id="guidance">
+
+        <div class="section-heading">
+            <span class="section-label">PATIENT GUIDANCE</span>
+
+            <h2>How SmartCare Works</h2>
+
+            <p>
+                A simple and convenient way to manage your hospital visit.
+            </p>
+        </div>
+
+
+        <div class="guidance-grid">
+
+            <div class="guidance-card">
+                <span class="guidance-number">01</span>
+                <h3>Register Digitally</h3>
+                <p>
+                    Enter your basic information and select the required
+                    hospital department.
+                </p>
+            </div>
+
+
+            <div class="guidance-card">
+                <span class="guidance-number">02</span>
+                <h3>Receive Your Token</h3>
+                <p>
+                    Get a digital token number without standing in a
+                    registration queue.
+                </p>
+            </div>
+
+
+            <div class="guidance-card">
+                <span class="guidance-number">03</span>
+                <h3>Track Your Position</h3>
+                <p>
+                    Monitor the live queue and estimated waiting time.
+                </p>
+            </div>
+
+
+            <div class="guidance-card">
+                <span class="guidance-number">04</span>
+                <h3>Visit the Department</h3>
+                <p>
+                    Follow the guidance and visit your department when
+                    your token is called.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="footer-content">
+
+            <div class="footer-brand">
+                <a href="#home" class="logo">
+                    <span>✚</span> SmartCare
+                </a>
+
+                <p>
+                    Making healthcare registration simple,
+                    accessible, and efficient.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <a href="#registration">Registration</a>
+                <a href="#my-token">My Token</a>
+                <a href="#live-queue">Live Queue</a>
+                <a href="#guidance">Guidance</a>
+            </div>
+
+            <div class="footer-links">
+                <h4>Services</h4>
+                <a href="#registration">Patient Registration</a>
+                <a href="#live-queue">Queue Tracking</a>
+                <a href="#guidance">Patient Guidance</a>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p>
+                © 2026 SmartCare. Digital Patient Registration System.
+            </p>
+        </div>
+
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

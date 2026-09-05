@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartCare | Staff Dashboard</title>
+
+    <link rel="stylesheet" href="staff.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <a href="index.html" class="logo">
+            <span>✚</span> SmartCare
+        </a>
+
+        <div class="staff-title">
+            Staff Dashboard
+        </div>
+
+        <button id="logoutBtn" class="back-btn" type="button">Logout</button>
+        <a href="index.html" class="back-btn">
+            ← Patient Website
+        </a>
+
+    </header>
+
+
+    <!-- MAIN DASHBOARD -->
+    <main class="dashboard-container">
+
+        <!-- PAGE HEADER -->
+        <section class="page-header">
+
+            <div>
+                <span class="section-label">
+                    HOSPITAL OPERATIONS
+                </span>
+
+                <h1>Staff Dashboard</h1>
+
+                <p>
+                    Manage patient registrations and control the live queue.
+                </p>
+            </div>
+
+            <div class="connection-status">
+                <span class="status-dot"></span>
+                <span id="connectionText">Connecting...</span>
+            </div>
+
+        </section>
+
+
+        <!-- STATISTICS -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+
+                <div>
+                    <span>Total Patients</span>
+                    <strong id="totalPatients">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+
+                <div>
+                    <span>Waiting</span>
+                    <strong id="waitingPatients">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔔</div>
+
+                <div>
+                    <span>Currently Serving</span>
+                    <strong id="servingPatients">0</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+
+                <div>
+                    <span>Completed</span>
+                    <strong id="completedPatients">0</strong>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- CONTROL PANEL -->
+        <section class="control-panel">
+
+            <div class="panel-heading">
+
+                <div>
+                    <span class="section-label">
+                        QUEUE CONTROL
+                    </span>
+
+                    <h2>Manage Patient Queue</h2>
+
+                    <p>
+                        Select a department and control the next patient.
+                    </p>
+                </div>
+
+                <button
+                    class="refresh-btn"
+                    id="refreshBtn"
+                >
+                    ↻ Refresh
+                </button>
+
+            </div>
+
+
+            <div class="control-grid">
+
+                <div class="control-group">
+
+                    <label for="departmentFilter">
+                        Select Department
+                    </label>
+
+                    <select id="departmentFilter">
+
+                        <option value="All">
+                            All Departments
+                        </option>
+
+                        <option value="General Medicine">
+                            General Medicine
+                        </option>
+
+                        <option value="Cardiology">
+                            Cardiology
+                        </option>
+
+                        <option value="Dermatology">
+                            Dermatology
+                        </option>
+
+                        <option value="Orthopedics">
+                            Orthopedics
+                        </option>
+
+                        <option value="Pediatrics">
+                            Pediatrics
+                        </option>
+
+                        <option value="ENT">
+                            ENT
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="control-group">
+
+                    <label for="statusFilter">
+                        Filter Status
+                    </label>
+
+                    <select id="statusFilter">
+
+                        <option value="All">
+                            All Status
+                        </option>
+
+                        <option value="Waiting">
+                            Waiting
+                        </option>
+
+                        <option value="Serving">
+                            Serving
+                        </option>
+
+                        <option value="Completed">
+                            Completed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="control-group">
+
+                    <label for="searchInput">
+                        Search Patient
+                    </label>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search token or name"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- CURRENT PATIENT -->
+            <div class="current-patient" id="currentPatient">
+
+                <div class="current-patient-empty">
+                    <span>🎟️</span>
+
+                    <div>
+                        <h3>No Patient Currently Serving</h3>
+
+                        <p>
+                            Click "Call Next Patient" to begin.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="action-buttons">
+
+                <button
+                    class="primary-action"
+                    id="callNextBtn"
+                >
+                    📢 Call Next Patient
+                </button>
+
+                <button
+                    class="secondary-action"
+                    id="completeBtn"
+                    disabled
+                >
+                    ✓ Complete Patient
+                </button>
+
+                <button
+                    class="warning-action"
+                    id="skipBtn"
+                    disabled
+                >
+                    ↷ Skip Patient
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- PATIENT TABLE -->
+        <section class="patients-panel">
+
+            <div class="panel-heading">
+
+                <div>
+                    <span class="section-label">
+                        PATIENT RECORDS
+                    </span>
+
+                    <h2>Registered Patients</h2>
+
+                    <p>
+                        View and manage all patients in the selected queue.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table class="patients-table">
+
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Patient Name</th>
+                            <th>Age</th>
+                            <th>Mobile</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Estimated Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="patientsTableBody">
+                        <tr>
+                            <td colspan="8" class="loading-cell">
+                                Loading patients...
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- TOAST MESSAGE -->
+    <div class="toast" id="toast"></div>
+
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="staff.js"></script>
+
+    
+
+</body>
+</html>

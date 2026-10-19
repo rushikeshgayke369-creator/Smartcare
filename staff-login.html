@@ -3,17 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>SmartCare | Staff Login</title>
+
+    <script>
+        /* Same saved theme as the patient website (applied before first paint) */
+        (function () {
+            try {
+                var t = localStorage.getItem("sc_theme");
+                if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                document.documentElement.setAttribute("data-theme", t);
+            } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="staff-login.css">
 </head>
 <body>
 
     <main class="login-card">
 
-        <div class="logo">✚ SmartCare</div>
+        <div class="logo">
+            <span class="logo-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg>
+            </span>
+            SmartCare
+            <span class="logo-tag">Staff</span>
+        </div>
 
         <h1>Staff Login</h1>
-        <p>Sign in to manage the patient queue.</p>
+        <p class="intro">Sign in to manage the patient queue.</p>
 
         <form id="loginForm">
 
@@ -39,15 +62,17 @@
                 Sign In
             </button>
 
-            <p id="message"></p>
+            <p id="message" role="alert"></p>
 
         </form>
 
-        <a href="index.html">← Patient Website</a>
+        <a href="index.html" class="back-link">← Patient Website</a>
 
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Required: staff-login.js reads window.SMARTCARE_CONFIG -->
+    <script src="config.js"></script>
     <script src="staff-login.js"></script>
 
 </body>

@@ -1,98 +1,186 @@
-* {
-    box-sizing: border-box;
+/* =========================================================
+   SmartCare — staff-login.css
+   Same design system as the patient site and staff dashboard.
+   ========================================================= */
+
+:root {
+    --navy: #123B5D;
+    --teal: #16B5AA;
+    --teal-strong: #0B7F78;
+    --teal-soft: #E3F6F4;
+
+    --bg: #F5FAFF;
+    --surface: #FFFFFF;
+    --border: #DCEBED;
+    --text: #17324A;
+    --muted: #53697C;
+    --heading: #123B5D;
+    --err: #B3261E;
+    --ok: #14683A;
+    --shadow-lg: 0 24px 60px rgba(18, 59, 93, .16);
 }
+
+[data-theme="dark"] {
+    --bg: #0A1826;
+    --surface: #112437;
+    --border: #25425C;
+    --text: #E4EEF7;
+    --muted: #9CB3C6;
+    --heading: #F1F7FC;
+    --teal-soft: #123A3F;
+    --err: #FF8A80;
+    --ok: #8DE3AE;
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .5);
+}
+
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
     min-height: 100vh;
+    padding: 24px;
     display: grid;
     place-items: center;
-    background: #e9f9f8;
-    font-family: Arial, sans-serif;
-    color: #17324d;
+
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16.5px;
+    line-height: 1.55;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 12% 8%, var(--teal-soft) 0, transparent 38%),
+        var(--bg);
 }
 
 .login-card {
-    width: min(420px, 90%);
-    background: white;
-    padding: 38px;
-    border-radius: 18px;
-    box-shadow: 0 15px 45px rgba(18, 59, 93, 0.12);
+    width: min(460px, 100%);
+    padding: clamp(28px, 5vw, 44px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow-lg);
 }
 
 .logo {
-    font-size: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+
+    font-family: "Manrope", sans-serif;
+    font-size: 1.5rem;
     font-weight: 800;
-    color: #0e9f9a;
-    margin-bottom: 25px;
+    letter-spacing: -.01em;
+    color: var(--heading);
+}
+
+.logo-mark {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--teal-strong);
+    color: #fff;
+}
+
+.logo-tag {
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--navy);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
 }
 
 h1 {
     margin: 0 0 8px;
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.2rem);
+    letter-spacing: -.02em;
+    color: var(--heading);
 }
 
-p {
-    color: #718592;
-}
+.intro { margin: 0; color: var(--muted); }
+
+form { margin-top: 26px; }
 
 label {
     display: block;
-    margin: 18px 0 7px;
-    font-weight: 700;
+    margin: 18px 0 8px;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--heading);
 }
 
 input {
+    display: block;
     width: 100%;
-    padding: 13px;
-    border: 1px solid #dce8eb;
-    border-radius: 8px;
-    font-size: 15px;
+    min-height: 52px;
+    padding: 12px 16px;
+
+    font: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+
+    transition: border-color .15s ease, box-shadow .15s ease;
 }
 
 input:focus {
     outline: none;
-    border-color: #0e9f9a;
+    border-color: var(--teal-strong);
+    box-shadow: 0 0 0 4px rgba(22, 181, 170, .22);
 }
 
 button {
     width: 100%;
-    margin-top: 22px;
-    padding: 14px;
+    min-height: 54px;
+    margin-top: 26px;
+    padding: 12px 18px;
+
     border: 0;
-    border-radius: 8px;
-    background: #0e9f9a;
-    color: white;
+    border-radius: 12px;
+    background: var(--teal-strong);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(11, 127, 120, .25);
+
+    font: inherit;
     font-weight: 700;
     cursor: pointer;
-    font-size: 15px;
+    transition: background .15s ease, transform .12s ease;
 }
 
-button:hover {
-    background: #0b817d;
-}
+button:hover { background: #096a64; }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: .65; cursor: wait; }
 
-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-a {
-    display: block;
-    margin-top: 22px;
-    color: #0e817d;
-    text-decoration: none;
+:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 2px;
 }
 
 #message {
-    min-height: 20px;
-    margin-top: 15px;
-    font-size: 14px;
+    min-height: 24px;
+    margin: 14px 0 0;
+    font-size: .95rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
-#message.error {
-    color: #d33;
-}
+#message.error { color: var(--err); }
+#message.success { color: var(--ok); }
 
-#message.success {
-    color: #0e817d;
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    font-weight: 700;
+    color: var(--teal-strong);
 }
+[data-theme="dark"] .back-link { color: #7FE3DA; }
+.back-link:hover { text-decoration: underline; }

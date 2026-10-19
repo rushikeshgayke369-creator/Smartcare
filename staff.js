@@ -1,16 +1,27 @@
 // ========================================
 // SUPABASE CONFIGURATION
+// (URL + key now live in config.js)
 // ========================================
 
-const SUPABASE_URL =
-    "https://poxftbzgcguzpdsjkbrs.supabase.co";
-
-const SUPABASE_PUBLISHABLE_KEY =
-    "sb_publishable_klfcdMI4YZ20UC4YNj465w_2Qxefr_J";
+const {
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    QUEUE_WINDOW_HOURS = 24,
+    AVG_MIN_PER_PATIENT = 5
+} = window.SMARTCARE_CONFIG;
 
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
+    SUPABASE_KEY,
+    {
+        auth: {
+            // Staff sessions end when the browser tab is closed.
+            storage: window.sessionStorage,
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
 );
 
 
@@ -20,6 +31,8 @@ const supabaseClient = window.supabase.createClient(
 
 let patients = [];
 let currentPatient = null;
+let announcements = [];
+let reloadTimer = null;
 
 
 // ========================================
@@ -62,9 +75,29 @@ const connectionText =
 const logoutBtn =
     document.getElementById("logoutBtn");
 
+const announceForm =
+    document.getElementById("announceForm");
+
+const noticeKind =
+    document.getElementById("noticeKind");
+
+const noticeMessage =
+    document.getElementById("noticeMessage");
+
+const noticeBtn =
+    document.getElementById("noticeBtn");
+
+const noticeError =
+    document.getElementById("noticeError");
+
+const noticeList =
+    document.getElementById("noticeList");
+
 
 // ========================================
 // STAFF AUTHENTICATION
+// A login alone is not enough: the account
+// must also have the "staff" role.
 // ========================================
 
 async function checkStaffLogin() {
@@ -72,16 +105,32 @@ async function checkStaffLogin() {
     const { data, error } =
         await supabaseClient.auth.getSession();
 
-    if (error) {
-        console.error("Session error:", error);
+    if (error || !data.session) {
+
+        if (error) console.error("Session error:", error);
 
         window.location.replace("staff-login.html");
 
         return false;
     }
 
-    if (!data.session) {
+    const { data: isStaff, error: roleError } =
+        await supabaseClient.rpc("is_staff");
+
+    if (roleError) {
+        // Could be a network problem: do not sign the user out.
+        console.error("Role check error:", roleError);
+
         window.location.replace("staff-login.html");
+
+        return false;
+    }
+
+    if (isStaff !== true) {
+
+        await supabaseClient.auth.signOut();
+
+        window.location.replace("staff-login.html?denied=1");
 
         return false;
     }
@@ -121,6 +170,8 @@ async function logoutStaff() {
 // TOAST MESSAGE
 // ========================================
 
+let toastTimer;
+
 function showToast(message) {
 
     if (!toast) return;
@@ -128,9 +179,42 @@ function showToast(message) {
     toast.textContent = message;
     toast.classList.add("show");
 
-    setTimeout(() => {
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
         toast.classList.remove("show");
     }, 3000);
+}
+
+
+// ========================================
+// QUEUE MATHS
+// Estimated time is calculated from the live
+// queue instead of being stored, so it never
+// goes out of date.
+// ========================================
+
+function sameId(a, b) {
+    return String(a) === String(b);
+}
+
+function waitingAhead(patient) {
+
+    const mine = new Date(patient.queue_at).getTime();
+
+    return patients.filter(item =>
+        item.department === patient.department &&
+        item.status === "Waiting" &&
+        new Date(item.queue_at).getTime() < mine
+    ).length;
+}
+
+function estimateFor(patient) {
+
+    if (patient.status === "Serving") return "Now";
+    if (patient.status === "Completed") return "—";
+
+    return (waitingAhead(patient) + 1) * AVG_MIN_PER_PATIENT + " min";
 }
 
 
@@ -138,18 +222,32 @@ function showToast(message) {
 // LOAD PATIENTS
 // ========================================
 
-async function loadPatients() {
+async function loadPatients(silent = false) {
 
-    if (connectionText) {
+    if (!silent && connectionText) {
         connectionText.textContent = "Loading...";
     }
 
-    const { data, error } = await supabaseClient
-        .from("patients")
-        .select("*")
-        .order("created_at", {
-            ascending: true
-        });
+    // const since = new Date(
+    //     Date.now() - QUEUE_WINDOW_HOURS * 60 * 60 * 1000
+    // ).toISOString();
+
+    // const { data, error } = await supabaseClient
+    //     .from("patients")
+    //     .select("*")
+    //     .gte("created_at", since)
+    //     .order("queue_at", {
+    //         ascending: true
+    //     })
+    //     .limit(500);
+
+    
+const { data, error } = await supabaseClient
+    .from("patients")
+    .select("*")
+    .order("queue_at", { ascending: true })
+    .limit(500);
+
 
     if (error) {
 
@@ -159,28 +257,38 @@ async function loadPatients() {
             connectionText.textContent = "Database Error";
         }
 
-        patientsTableBody.innerHTML = `
-            <tr>
-                <td colspan="8" class="empty-cell">
-                    Unable to load patients.
-                </td>
-            </tr>
-        `;
+        if (!silent) {
+            patientsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty-cell">
+                        Unable to load patients.
+                    </td>
+                </tr>
+            `;
 
-        showToast("Unable to load patients.");
+            showToast("Unable to load patients.");
+        }
 
         return;
     }
 
     patients = data || [];
 
-    if (connectionText) {
+    if (connectionText && !silent) {
         connectionText.textContent = "Connected";
     }
 
     updateStatistics();
     displayPatients();
     updateCurrentPatient();
+}
+
+// Many realtime events can arrive at once: reload only once.
+function scheduleReload() {
+
+    clearTimeout(reloadTimer);
+
+    reloadTimer = setTimeout(() => loadPatients(true), 300);
 }
 
 
@@ -262,7 +370,7 @@ function displayPatients() {
 
         patientsTableBody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-cell">
+                <td colspan="9" class="empty-cell">
                     No patients found.
                 </td>
             </tr>
@@ -285,6 +393,9 @@ function displayPatients() {
             statusClass = "status-serving";
         }
 
+        const reason = String(patient.reason ?? "");
+
+        // NOTE: "age ?? '-'" so a newborn (age 0) is shown as 0, not "-"
         row.innerHTML = `
             <td class="token-cell">
                 ${escapeHTML(patient.token)}
@@ -295,7 +406,7 @@ function displayPatients() {
             </td>
 
             <td>
-                ${patient.age || "-"}
+                ${escapeHTML(patient.age ?? "-")}
             </td>
 
             <td>
@@ -306,6 +417,10 @@ function displayPatients() {
                 ${escapeHTML(patient.department)}
             </td>
 
+            <td title="${escapeHTML(reason)}">
+                ${escapeHTML(reason ? reason.slice(0, 40) : "-")}
+            </td>
+
             <td>
                 <span class="status-badge ${statusClass}">
                     ${escapeHTML(patient.status)}
@@ -313,7 +428,7 @@ function displayPatients() {
             </td>
 
             <td>
-                ${escapeHTML(patient.estimated_time || "-")}
+                ${escapeHTML(estimateFor(patient))}
             </td>
 
             <td>
@@ -322,7 +437,8 @@ function displayPatients() {
                         ? `
                             <button
                                 class="table-action"
-                                onclick="callSpecificPatient('${patient.id}')"
+                                type="button"
+                                data-call="${escapeHTML(patient.id)}"
                             >
                                 Call
                             </button>
@@ -345,12 +461,19 @@ async function callNextPatient() {
 
     const department = departmentFilter.value;
 
+    // Each department has its own queue, so pick one first.
+    if (department === "All") {
+
+        showToast("Select a department first, then call the next patient.");
+
+        departmentFilter.focus();
+
+        return;
+    }
+
     const alreadyServing = patients.find(patient =>
         patient.status === "Serving" &&
-        (
-            department === "All" ||
-            patient.department === department
-        )
+        patient.department === department
     );
 
     if (alreadyServing) {
@@ -362,12 +485,10 @@ async function callNextPatient() {
         return;
     }
 
+    // "patients" is sorted by queue position, so the first match is next.
     const nextPatient = patients.find(patient =>
         patient.status === "Waiting" &&
-        (
-            department === "All" ||
-            patient.department === department
-        )
+        patient.department === department
     );
 
     if (!nextPatient) {
@@ -377,11 +498,10 @@ async function callNextPatient() {
         return;
     }
 
-    await updatePatientStatus(
-        nextPatient.id,
-        "Serving",
-        "Now"
-    );
+    await updatePatient(nextPatient.id, {
+        status: "Serving",
+        estimated_time: "Now"
+    });
 }
 
 
@@ -392,7 +512,7 @@ async function callNextPatient() {
 async function callSpecificPatient(id) {
 
     const patient = patients.find(
-        item => item.id === id
+        item => sameId(item.id, id)
     );
 
     if (!patient) return;
@@ -411,11 +531,10 @@ async function callSpecificPatient(id) {
         return;
     }
 
-    await updatePatientStatus(
-        patient.id,
-        "Serving",
-        "Now"
-    );
+    await updatePatient(patient.id, {
+        status: "Serving",
+        estimated_time: "Now"
+    });
 }
 
 
@@ -427,60 +546,73 @@ async function completeCurrentPatient() {
 
     if (!currentPatient) return;
 
-    await updatePatientStatus(
-        currentPatient.id,
-        "Completed",
-        "Completed"
-    );
+    await updatePatient(currentPatient.id, {
+        status: "Completed",
+        estimated_time: "Completed"
+    });
 }
 
 
 // ========================================
 // SKIP PATIENT
+// The patient goes to the BACK of the line
+// (queue_at = now). Before, a skipped patient
+// stayed first in line and was called again.
 // ========================================
 
 async function skipCurrentPatient() {
 
     if (!currentPatient) return;
 
-    await updatePatientStatus(
-        currentPatient.id,
-        "Waiting",
-        "Skipped"
-    );
+    await updatePatient(currentPatient.id, {
+        status: "Waiting",
+        estimated_time: "Skipped",
+        queue_at: new Date().toISOString()
+    });
 }
 
 
 // ========================================
-// UPDATE PATIENT STATUS
+// UPDATE PATIENT
 // ========================================
 
-async function updatePatientStatus(
-    patientId,
-    status,
-    estimatedTime
-) {
+async function updatePatient(patientId, fields) {
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("patients")
-        .update({
-            status: status,
-            estimated_time: estimatedTime
-        })
-        .eq("id", patientId);
+        .update(fields)
+        .eq("id", patientId)
+        .select("id");
 
     if (error) {
 
         console.error("Update error:", error);
 
-        showToast("Unable to update patient.");
+        // 23505 = the "one Serving patient per department" rule was hit
+        if (error.code === "23505") {
+            showToast("Another patient is already being served in this department.");
+        } else {
+            showToast("Unable to update patient.");
+        }
 
-        return;
+        await loadPatients(true);
+
+        return false;
+    }
+
+    // Row Level Security silently updates 0 rows when not allowed
+    if (!data || data.length === 0) {
+
+        showToast("You do not have permission to update this patient.");
+
+        return false;
     }
 
     showToast("Patient queue updated successfully.");
 
-    await loadPatients();
+    await loadPatients(true);
+
+    return true;
 }
 
 
@@ -510,7 +642,7 @@ function updateCurrentPatient() {
                     <h3>No Patient Currently Serving</h3>
 
                     <p>
-                        Click "Call Next Patient" to begin.
+                        Select a department and click "Call Next Patient" to begin.
                     </p>
                 </div>
             </div>
@@ -560,6 +692,172 @@ function updateCurrentPatient() {
 
 
 // ========================================
+// ANNOUNCEMENTS
+// ========================================
+
+async function loadAnnouncements() {
+
+    const { data, error } = await supabaseClient
+        .from("announcements")
+        .select("*")
+        .order("created_at", {
+            ascending: false
+        })
+        .limit(20);
+
+    if (error) {
+
+        console.error("Announcements error:", error);
+
+        noticeList.innerHTML = `
+            <li class="notice-empty">
+                Unable to load announcements. Has the database script been run?
+            </li>
+        `;
+
+        return;
+    }
+
+    announcements = data || [];
+
+    displayAnnouncements();
+}
+
+function displayAnnouncements() {
+
+    if (announcements.length === 0) {
+
+        noticeList.innerHTML = `
+            <li class="notice-empty">
+                No announcements yet.
+            </li>
+        `;
+
+        return;
+    }
+
+    noticeList.innerHTML = announcements.map(item => `
+        <li class="${item.is_active ? "" : "notice-hidden"}">
+
+            <span>
+                <span class="notice-kind ${item.kind === "doctor" ? "doctor" : ""}">
+                    ${item.kind === "doctor" ? "Doctor availability" : "Department notice"}
+                </span>
+                ${escapeHTML(item.message)}
+                ${item.is_active ? "" : "<em>(hidden)</em>"}
+            </span>
+
+            <span class="notice-buttons">
+                <button
+                    class="table-action"
+                    type="button"
+                    data-toggle-notice="${escapeHTML(item.id)}"
+                >
+                    ${item.is_active ? "Hide" : "Show"}
+                </button>
+
+                <button
+                    class="table-action danger"
+                    type="button"
+                    data-delete-notice="${escapeHTML(item.id)}"
+                >
+                    Delete
+                </button>
+            </span>
+
+        </li>
+    `).join("");
+}
+
+async function publishAnnouncement(event) {
+
+    event.preventDefault();
+
+    const message = noticeMessage.value.trim();
+
+    noticeError.textContent = "";
+
+    if (message.length < 5 || message.length > 140) {
+
+        noticeError.textContent =
+            "Enter a message between 5 and 140 characters.";
+
+        noticeMessage.focus();
+
+        return;
+    }
+
+    noticeBtn.disabled = true;
+
+    const { error } = await supabaseClient
+        .from("announcements")
+        .insert({
+            kind: noticeKind.value,
+            message: message
+        });
+
+    noticeBtn.disabled = false;
+
+    if (error) {
+
+        console.error("Publish error:", error);
+
+        noticeError.textContent = "Unable to publish the announcement.";
+
+        return;
+    }
+
+    noticeMessage.value = "";
+
+    showToast("Announcement published.");
+
+    await loadAnnouncements();
+}
+
+async function toggleAnnouncement(id) {
+
+    const item = announcements.find(
+        entry => sameId(entry.id, id)
+    );
+
+    if (!item) return;
+
+    const { error } = await supabaseClient
+        .from("announcements")
+        .update({ is_active: !item.is_active })
+        .eq("id", item.id);
+
+    if (error) {
+        console.error("Toggle error:", error);
+        showToast("Unable to update announcement.");
+        return;
+    }
+
+    await loadAnnouncements();
+}
+
+async function deleteAnnouncement(id) {
+
+    if (!window.confirm("Delete this announcement permanently?")) return;
+
+    const { error } = await supabaseClient
+        .from("announcements")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        console.error("Delete error:", error);
+        showToast("Unable to delete announcement.");
+        return;
+    }
+
+    showToast("Announcement deleted.");
+
+    await loadAnnouncements();
+}
+
+
+// ========================================
 // ESCAPE HTML
 // ========================================
 
@@ -576,6 +874,9 @@ function escapeHTML(value) {
 
 // ========================================
 // REAL-TIME UPDATES
+// Realtime pushes changes instantly. A slow
+// background refresh is kept as a safety net
+// in case the realtime connection drops.
 // ========================================
 
 function subscribeToRealtime() {
@@ -589,11 +890,25 @@ function subscribeToRealtime() {
                 schema: "public",
                 table: "patients"
             },
-            function () {
-                loadPatients();
-            }
+            scheduleReload
         )
-        .subscribe();
+        .subscribe(function (status) {
+
+            if (!connectionText) return;
+
+            if (status === "SUBSCRIBED") {
+                connectionText.textContent = "Live";
+            } else if (
+                status === "CHANNEL_ERROR" ||
+                status === "TIMED_OUT"
+            ) {
+                connectionText.textContent = "Connected (auto-refresh)";
+            }
+        });
+
+    setInterval(function () {
+        if (!document.hidden) loadPatients(true);
+    }, 15000);
 }
 
 
@@ -625,7 +940,10 @@ function setupEventListeners() {
 
     refreshBtn.addEventListener(
         "click",
-        loadPatients
+        function () {
+            loadPatients();
+            loadAnnouncements();
+        }
     );
 
     departmentFilter.addEventListener(
@@ -645,6 +963,47 @@ function setupEventListeners() {
         "input",
         displayPatients
     );
+
+    // "Call" buttons inside the table
+    patientsTableBody.addEventListener(
+        "click",
+        function (event) {
+
+            const button = event.target.closest("[data-call]");
+
+            if (button) {
+                callSpecificPatient(button.dataset.call);
+            }
+        }
+    );
+
+    announceForm.addEventListener(
+        "submit",
+        publishAnnouncement
+    );
+
+    noticeList.addEventListener(
+        "click",
+        function (event) {
+
+            const toggle =
+                event.target.closest("[data-toggle-notice]");
+
+            const remove =
+                event.target.closest("[data-delete-notice]");
+
+            if (toggle) toggleAnnouncement(toggle.dataset.toggleNotice);
+            if (remove) deleteAnnouncement(remove.dataset.deleteNotice);
+        }
+    );
+
+    // If the session ends (expired / signed out elsewhere), leave the dashboard
+    supabaseClient.auth.onAuthStateChange(function (event) {
+
+        if (event === "SIGNED_OUT") {
+            window.location.replace("staff-login.html");
+        }
+    });
 }
 
 
@@ -661,6 +1020,7 @@ async function startDashboard() {
     setupEventListeners();
 
     await loadPatients();
+    await loadAnnouncements();
 
     subscribeToRealtime();
 
@@ -676,3 +1036,38 @@ document.addEventListener(
     "DOMContentLoaded",
     startDashboard
 );
+
+/* =========================================================
+   SmartCare — staff-ui.js
+   Theme toggle for the staff pages. Uses the same saved
+   setting ("sc_theme") as the patient website.
+   Kept separate so staff.js does not need to change.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    var button = document.getElementById("themeToggle");
+
+    if (!button) return;
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+
+        try {
+            localStorage.setItem("sc_theme", theme);
+        } catch (e) { /* storage blocked: theme still changes for this visit */ }
+
+        button.setAttribute("aria-pressed", String(theme === "dark"));
+        button.setAttribute(
+            "aria-label",
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+        );
+    }
+
+    applyTheme(document.documentElement.getAttribute("data-theme") || "light");
+
+    button.addEventListener("click", function () {
+        var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+        applyTheme(isDark ? "light" : "dark");
+    });
+})();
